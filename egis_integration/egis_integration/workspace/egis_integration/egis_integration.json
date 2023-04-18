@@ -22,9 +22,18 @@
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "EGIS Search Query",
+   "link_to": "EGIS Search Query",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
   }
  ],
- "modified": "2023-04-18 15:43:20.618172",
+ "modified": "2023-04-18 16:34:36.472495",
  "modified_by": "Administrator",
  "module": "EGIS Integration",
  "name": "EGIS Integration",
