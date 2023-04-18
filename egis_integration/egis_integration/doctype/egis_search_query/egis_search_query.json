@@ -1,0 +1,59 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2023-04-18 16:03:02.882280",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "request_section",
+  "search_term",
+  "make_request",
+  "response_section"
+ ],
+ "fields": [
+  {
+   "fieldname": "request_section",
+   "fieldtype": "Section Break",
+   "label": "Request"
+  },
+  {
+   "default": "0",
+   "fieldname": "make_request",
+   "fieldtype": "Button",
+   "label": "Make Request"
+  },
+  {
+   "fieldname": "response_section",
+   "fieldtype": "Section Break",
+   "label": "Response"
+  },
+  {
+   "fieldname": "search_term",
+   "fieldtype": "Data",
+   "label": "Search Term"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2023-04-18 16:31:07.982547",
+ "modified_by": "Administrator",
+ "module": "EGIS Integration",
+ "name": "EGIS Search Query",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}
