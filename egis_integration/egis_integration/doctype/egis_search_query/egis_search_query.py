@@ -120,31 +120,20 @@ def make_request(search_term, search_options, start_row):
 
 @frappe.whitelist()
 def import_items(items):
+	items = items.replace("&quot;", "'")
 	items = json.loads(items)
 	for item in items:
-		brand = item.get("manufacturer_name")
-		if not frappe.db.exists("Brand", brand):
-			brand = frappe.get_doc({
-				"doctype": "Brand",
-				"brand": brand,
-				"id": item.get("manufacturer_id")
-			})
-			brand.insert()
-		item_group = item.get("product_group_id")
-		if not frappe.db.exists("Item Group", item_group):
-			item_group = frappe.get_doc({
-				"doctype": "Item Group",
-				"parent_item_group": "EGIS", #TODO: this should be better
-				"item_group_name": item_group
-			})
-			item_group.insert()
-			item_group = item_group.name
+		if item.get("item_exists"):
+			update_item(item)
+			continue
+		brand = get_brand(item)
+		item_group = get_item_group(item)
 		item_doc = frappe.new_doc("Item")
 		item_doc.item_code = item.get("proprietary_product_number")
 		item_doc.item_name = item.get("proprietary_product_description")
 		item_doc.description = item.get("proprietary_product_description")
 		item_doc.item_group = item_group
-		item_doc.brand = item.get("manufacturer_name")
+		item_doc.brand = brand
 		item_doc.manufacturer_product_number = item.get("manufacturer_product_number")
 		item_doc.global_product_number = item.get("global_product_number")
 		item_doc.website_image = item.get("image_url")
@@ -159,4 +148,84 @@ def import_items(items):
 				"item_code": item_doc.name,
 				"price_list": "Standard Buying", # TODO maybe we should have this set on EGIS Settings
 				"price_list_rate": flt(item.get("purchase_price"))
+			}).insert()
+
+def get_brand(item):
+	brand = item.get("manufacturer_name")
+	if not frappe.db.exists("Brand", brand):
+		brand = frappe.get_doc({
+			"doctype": "Brand",
+			"brand": brand,
+			"id": item.get("manufacturer_id")
+		})
+		brand.insert()
+		brand = brand.name
+	return brand
+
+def get_item_group(item):
+	item_group = item.get("product_group_id")
+	if not frappe.db.exists("Item Group", item_group):
+		item_group = frappe.get_doc({
+			"doctype": "Item Group",
+			"parent_item_group": "EGIS", #TODO: this should be better
+			"item_group_name": item_group
+		})
+		item_group.insert()
+		item_group = item_group.name
+	return item_group
+
+def update_item(item):
+	item_erpnext = frappe.get_doc("Item", item.get("proprietary_product_number"))
+	changed = False
+	if item_erpnext.item_name != item.get("proprietary_product_description"):
+		item_erpnext.item_name = item.get("proprietary_product_description")
+		changed = True
+	if item_erpnext.description != item.get("proprietary_product_description"):
+		item_erpnext.description = item.get("proprietary_product_description")
+		changed = True
+	if item_erpnext.manufacturer_product_number != item.get("manufacturer_product_number"):
+		item_erpnext.manufacturer_product_number = item.get("manufacturer_product_number")
+		changed = True
+	if item_erpnext.global_product_number != item.get("global_product_number"):
+		item_erpnext.global_product_number = item.get("global_product_number")
+		changed = True
+
+	brand = get_brand(item)
+	if item_erpnext.brand != brand:
+		item_erpnext.brand = brand
+		changed = True
+
+	item_group = get_item_group(item)
+	if item_erpnext.item_group != item_group:
+		item_erpnext.item_group = item_group
+		changed = True
+	
+	if changed:
+		item_erpnext.save()
+
+	update_item_price(item, "Buying")
+	update_item_price(item, "Selling")
+
+def update_item_price(item, buying_or_selling):
+	if buying_or_selling == "Buying":
+		operation = "Buying"
+		price_field_name = "purchase_price"
+	elif buying_or_selling == "Selling":
+		operation = "Selling"
+		price_field_name = "recommended_retail_price"
+	item_price_list = frappe.db.get_list("Item Price", 
+						filters={"item_code": item.get("proprietary_product_number"), operation: 1}, 
+						fields=["name", "price_list_rate"])
+	if len(item_price_list) > 0:
+		name = item_price_list[0]["name"]
+		price = item_price_list[0]["price_list_rate"]
+		if price != flt(item.get(price_field_name)):
+			frappe.db.set_value("Item Price", name, "price_list_rate", flt(item.get(price_field_name)))
+	else:
+		if item.get(price_field_name):
+			frappe.get_doc({
+				"doctype": "Item Price",
+				"item_code": item.get("proprietary_product_number"),
+				"price_list": "Standard {}".format(operation),
+				"price_list_rate": flt(item.get(price_field_name))
 			}).insert()
