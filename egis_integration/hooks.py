@@ -188,3 +188,15 @@ user_data_fields = [
 #	"egis_integration.auth.validate"
 # ]
 
+fixtures = [
+    {"dt": "Custom Field", "filters": [
+        [
+            "name", "in", [
+				"Item-egis_data",
+				"Item-manufacturer_product_number",
+                "Item-global_product_number",
+				"Brand-id"
+            ]
+        ]
+    ]}
+]
