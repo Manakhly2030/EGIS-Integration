@@ -127,7 +127,7 @@ def import_items(items):
 			brand = frappe.get_doc({
 				"doctype": "Brand",
 				"brand": brand,
-				"description": "manufacturer_id: {}".format(item.get("manufacturer_id"))
+				"id": item.get("manufacturer_id")
 			})
 			brand.insert()
 		item_group = item.get("product_group_id")
@@ -142,11 +142,21 @@ def import_items(items):
 		item_doc = frappe.new_doc("Item")
 		item_doc.item_code = item.get("proprietary_product_number")
 		item_doc.item_name = item.get("proprietary_product_description")
-		item_doc.description = json.dumps(item)
+		item_doc.description = item.get("proprietary_product_description")
 		item_doc.item_group = item_group
 		item_doc.brand = item.get("manufacturer_name")
-		item_doc.manufacturer = item.get("manufacturer_name")
+		item_doc.manufacturer_product_number = item.get("manufacturer_product_number")
+		item_doc.global_product_number = item.get("global_product_number")
 		item_doc.website_image = item.get("image_url")
-		item_doc.standard_rate = flt(item.get("purchase_price"))
+		if item.get("recommended_retail_price"):
+			item_doc.standard_rate = flt(item.get("recommended_retail_price"))
 		item_doc.default_currency = item.get("currency_code")
 		item_doc.save()
+
+		if item.get("purchase_price"):
+			frappe.get_doc({
+				"doctype": "Item Price",
+				"item_code": item_doc.name,
+				"price_list": "Standard Buying", # TODO maybe we should have this set on EGIS Settings
+				"price_list_rate": flt(item.get("purchase_price"))
+			}).insert()
