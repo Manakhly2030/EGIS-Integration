@@ -35,6 +35,7 @@ frappe.ui.form.on('EGIS Search Query', {
 				} else {
 					response.Body.Item.forEach(item => {
 						var new_row = frm.add_child('response');
+						new_row.item_exists = item.item_exists
 						new_row.proprietary_product_number = item.ProductIdentification.ProprietaryProductNumber
 						new_row.proprietary_product_description = item.ProductIdentification.ProprietaryProductDescription
 						new_row.manufacturer_id = item.ProductIdentification.ManufacturerName["@id"]
@@ -53,6 +54,19 @@ frappe.ui.form.on('EGIS Search Query', {
 			}
 		})
 	},
+
+	import_items: function(frm) {
+		frappe.call({
+			method: "egis_integration.egis_integration.doctype.egis_search_query.egis_search_query.import_items",
+			args: {
+				items: frm.doc.response
+			},
+			callback: function (r){
+				console.log("response", r.message);
+				frappe.msgprint("Item importation completed.", "Success")
+			}
+		})
+	}
 });
 
 var get_search_options = function(frm){
