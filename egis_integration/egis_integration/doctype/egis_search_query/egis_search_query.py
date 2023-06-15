@@ -109,12 +109,15 @@ def make_request(search_term, search_options, start_row):
 	# }"""
 
 	response_json = json.loads(response)
-	for item in response_json["Body"]["Item"]:
-		item_code = item["ProductIdentification"]["ProprietaryProductNumber"]
-		item_exists = 0
-		if frappe.db.exists("Item", item_code):
-			item_exists = 1
-		item["item_exists"] = item_exists
+	if "Body" in response_json:
+		for item in response_json["Body"]["Item"]:
+			item_code = item["ProductIdentification"]["ProprietaryProductNumber"]
+			item_exists = 0
+			if frappe.db.exists("Item", item_code):
+				item_exists = 1
+			item["item_exists"] = item_exists
+	else:
+		frappe.throw(json.dumps(response_json), title="An error has occured")
 
 	return json.dumps(response_json)
 
